@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 use JSON;
+use Data::Dumper;
 
 #version 2012.06.26
 #added item prototype exclusion by item key
@@ -17,81 +18,81 @@ use JSON;
 # load a json string from a file
 sub loadjson
 {
-    #reset
-    $result = "";
+	#reset
+	$result = "";
 
-    # open file
-    open(FILE, "<", $_[0]);
-    # read whole file
-    while (<FILE>) { $result = $result.$_; }
-    # close file
-    close(FILE);
-    
-    #return
-    return $result
+	# open file
+	open(FILE, "<", $_[0]);
+	# read whole file
+	while (<FILE>) { $result = $result.$_; }
+	# close file
+	close(FILE);
+	
+	#return
+	return $result
 }
 
 
 # send json and get result (jsonstr):jsonstr
 sub sendjson
 {
-    #jsonstr
-    $jsonstr = $_[0];
-    
-    # send json to zabbix and get result
-    $res = `curl -s -i -X POST -H $header -d '$data' $url`;
-    # find start of json
-    $i = index($res, "{");
-    # get json only
-    $res_out = substr($res, $i);
-    
-    #return
-    return $res_out;    
+	#jsonstr
+	$jsonstr = $_[0];
+	
+	# send json to zabbix and get result
+	$res = `curl -s -i -X POST -H $header -d '$data' $url`;
+	# find start of json
+	$i = index($res, "{");
+	# get json only
+	$res_out = substr($res, $i);
+	
+	#return
+	return $res_out;	
 }
 
 
 # authenticate with zabbix, returns the auth token
 sub authenticate
 {
-    # load auth json
-    $data = '{ "jsonrpc": "2.0", "method": "user.login", "params": { "user": "'.$user.'", "password": "'.$password.'" }, "id": 1, "auth": null }';
-    # send json
-    $res = sendjson($data);    
-	#print $data."\n\n";
-	print "res:".$res."\n\n";
-    
-    # decode json
-    $dec = decode_json($res);
-    # get auth key
-    $auth_out = $dec->{"result"};
+	# load auth json
+	$data = '{ "jsonrpc": "2.0", "method": "user.login", "params": { "user": "'.$user.'", "password": "'.$password.'" }, "id": 1, "auth": null }';
+	# send json
+	$res = sendjson($data);	
+		#print $data."\n\n";
+		print "res:".$res."\n\n";
+	
+	# decode json
+	$dec = decode_json($res);
+	# get auth key
+	$auth_out = $dec->{"result"};
 
-    #return
-    return $auth_out;
+	#return
+	return $auth_out;
 }
 
 
 # get hostgroups from zabbix (auth)
 sub gethostgroups
 {
-    #auth
-    $auth_in = $_[0];
-    
-    # load hostgroups json
-    $data = '{ "jsonrpc": "2.0", "method": "hostgroup.get", "params": { "output": "extend", "sortfield": "name" }, "id": 1, "auth": "" }';
-    # decode json
-    $dec = decode_json($data);
-    # set auth
-    $dec->{"auth"} = $auth_in;
-    # encode back to data
-    $data = encode_json($dec);
-    
-    # send json
-    $res = sendjson($data);            
-    # decode json
-    $dec_out = decode_json($res);    
-    
-    #return
-    return $dec_out
+	#auth
+	$auth_in = $_[0];
+	
+	# load hostgroups json
+	$data = '{ "jsonrpc": "2.0", "method": "hostgroup.get", "params": { "output": "extend", "sortfield": "name" }, "id": 1, "auth": "" }';
+	# decode json
+	$dec = decode_json($data);
+	# set auth
+	$dec->{"auth"} = $auth_in;
+	# encode back to data
+	$data = encode_json($dec);
+	
+	# send json
+	$res = sendjson($data);			
+	# decode json
+	$dec_out = decode_json($res);	
+	
+	#return
+	return $dec_out
 }
 
 
@@ -99,33 +100,33 @@ sub gethostgroups
 # get hosts from zabbix (auth, groupid)
 sub gethosts
 {
-    #auth
-    $auth_in = $_[0];
-    #groupid
-    $groupid_in = $_[1];
-    
-    # load items json
-    $data = '{ "jsonrpc": "2.0", "method": "host.get", "params": { "output": "extend", "sortfield": "name", "selectParentTemplates": "extend", "groupids": [ "" ] }, "id": 2, "auth": "" }';
-    # decode json
-    $dec = decode_json($data);
-    # set auth
-    $dec->{"auth"} = $auth_in;
-    # set groupid filter (outside filter)
-    $dec->{"params"}->{"groupids"}[0] = $groupid_in;
-    # encode back to data
-    $data = encode_json($dec);
+	#auth
+	$auth_in = $_[0];
+	#groupid
+	$groupid_in = $_[1];
+	
+	# load items json
+	$data = '{ "jsonrpc": "2.0", "method": "host.get", "params": { "output": "extend", "sortfield": "name", "selectParentTemplates": "extend", "groupids": [ "" ] }, "id": 2, "auth": "" }';
+	# decode json
+	$dec = decode_json($data);
+	# set auth
+	$dec->{"auth"} = $auth_in;
+	# set groupid filter (outside filter)
+	$dec->{"params"}->{"groupids"}[0] = $groupid_in;
+	# encode back to data
+	$data = encode_json($dec);
 
-#    print $data."\n\n";
+#	print $data."\n\n";
 
-    # send json
-    $res = sendjson($data);            
-    # decode json
-    $dec_out = decode_json($res);    
-    
-#    print $res."\n\n";
-    
-    #return
-    return $dec_out;
+	# send json
+	$res = sendjson($data);			
+	# decode json
+	$dec_out = decode_json($res);	
+	
+#	print $res."\n\n";
+	
+	#return
+	return $dec_out;
 }
 
 
@@ -133,69 +134,69 @@ sub gethosts
 # get items from zabbix (auth, hostid)
 sub getitems
 {
-    #auth
-    $auth_in = $_[0];
-    #hostid
-    $hostid_in = $_[1];
-    
-    # load items json
-    $data = '{ "jsonrpc": "2.0", "method": "item.get", "params": { "output": "extend", "sortfield": "name", "filter": { "hostid": "" } }, "id": 1, "auth": "" }';
+	#auth
+	$auth_in = $_[0];
+	#hostid
+	$hostid_in = $_[1];
+	
+	# load items json
+	$data = '{ "jsonrpc": "2.0", "method": "item.get", "params": { "output": "extend", "sortfield": "name", "filter": { "hostid": "" } }, "id": 1, "auth": "" }';
 
-    # decode json
-    $dec = decode_json($data);
-    # set auth
-    $dec->{"auth"} = $auth_in;
-    # set hostid filter
-    $dec->{"params"}->{"filter"}->{"hostid"} = $hostid_in;
-    # encode back to data
-    $data = encode_json($dec);
+	# decode json
+	$dec = decode_json($data);
+	# set auth
+	$dec->{"auth"} = $auth_in;
+	# set hostid filter
+	$dec->{"params"}->{"filter"}->{"hostid"} = $hostid_in;
+	# encode back to data
+	$data = encode_json($dec);
 
-    # send json
-    $res = sendjson($data);            
-    # decode json
-    $dec_out = decode_json($res);    
-    
-#    print $res."\n\n";
-    
-    #return
-    return $dec_out
+	# send json
+	$res = sendjson($data);			
+	# decode json
+	$dec_out = decode_json($res);	
+	
+#	print $res."\n\n";
+	
+	#return
+	return $dec_out
 }
 
 
 # get graphs from zabbix (auth, hostid, graphname)
 sub getgraphs
 {
-    #auth
-    $auth_in = $_[0];
-    #hostid
-    $hostid_in = $_[1];
-    #graph
-    $graph_in = $_[2];
-    
-    # load graphs json
-    $data = '{ "jsonrpc": "2.0", "method": "graph.get", "params": { "output": "extend", "sortfield": "name", "hostids": [ "" ], "filter": { "name": "" } }, "id": 3, "auth": "" }';
-    # decode json
-    $dec = decode_json($data);
-    # set auth
-    $dec->{"auth"} = $auth_in;
-    # set name filter
-    $dec->{"params"}->{"filter"}->{"name"} = $graph_in;
-    # set hostid filter (outside filter)
-    $dec->{"params"}->{"hostids"}[0] = $hostid_in;
-    # encode back to data
-    $data = encode_json($dec);
+	#auth
+	$auth_in = $_[0];
+	#hostid
+	$hostid_in = $_[1];
+	#graph
+	$graph_in = $_[2];
+	
+	# load graphs json
+	$data = '{ "jsonrpc": "2.0", "method": "graph.get", "params": { "output": "extend", "sortfield": "name", "hostids": [ "" ], "filter": { "name": "" } }, "id": 3, "auth": "" }';
+	# decode json
+	$dec = decode_json($data);
+	# set auth
+	$dec->{"auth"} = $auth_in;
+	# set name filter
+	$dec->{"params"}->{"filter"}->{"name"} = $graph_in;
+	# set hostid filter (outside filter)
+	$dec->{"params"}->{"hostids"}[0] = $hostid_in;
+	# encode back to data
+	$data = encode_json($dec);
 
-#    print $data."\n\n";
+#	print $data."\n\n";
 
-    # send json
-    $res = sendjson($data);            
-    # decode json
-    $dec_out = decode_json($res);    
-    
-#    print $res."\n\n";
-    
-    #return
-    return $dec_out;
+	# send json
+	$res = sendjson($data);			
+	# decode json
+	$dec_out = decode_json($res);	
+	
+#	print $res."\n\n";
+	
+	#return
+	return $dec_out;
 }
 
 
@@ -203,138 +204,166 @@ sub getgraphs
 # delete graph from zabbix (auth, graphid)
 sub deletegraph
 {
-    #auth
-    $auth_in = $_[0];
-    #graphid
-    $graphid_in = $_[1];
-    
-    # load graphs json
-    $data = '{ "jsonrpc": "2.0", "method": "graph.delete", "params": [ "" ], "id": 4, "auth": "" }';
-    # decode json
-    $dec = decode_json($data);
-    # set auth
-    $dec->{"auth"} = $auth_in;
-    # set graphid
-    $hash[0] = $graphid_in;    
-    $dec->{"params"} = \@hash;
-    # encode back to data
-    $data = encode_json($dec);
-    
-#    print $data."\n\n";
+	#auth
+	$auth_in = $_[0];
+	#graphid
+	$graphid_in = $_[1];
+	
+	# load graphs json
+	$data = '{ "jsonrpc": "2.0", "method": "graph.delete", "params": [ "" ], "id": 4, "auth": "" }';
+	# decode json
+	$dec = decode_json($data);
+	# set auth
+	$dec->{"auth"} = $auth_in;
+	# set graphid
+	$hash[0] = $graphid_in;	
+	$dec->{"params"} = \@hash;
+	# encode back to data
+	$data = encode_json($dec);
+	
+#	print $data."\n\n";
 
-    # send json
-    $res = sendjson($data);            
-    # decode json
-    $dec_out = decode_json($res);    
-    
-#    print $res."\n\n";
+	# send json
+	$res = sendjson($data);			
+	# decode json
+	$dec_out = decode_json($res);	
+	
+#	print $res."\n\n";
 
-    print "    "."    "."    "."Graph deleted."."\n";
-    
-    #return
-    return $dec_out;
+	print "	"."	"."	"."Graph deleted."."\n";
+	
+	#return
+	return $dec_out;
 }
 
 
 # search and delete existing graphs from zabbix (auth, hostid, graphname)
 sub deletegraphs
 {
-    #auth
-    $auth_in = $_[0];
-    #hostid
-    $hostid_in = $_[1];
-    #graph
-    $graph_in = $_[2];
+	#auth
+	$auth_in = $_[0];
+	#hostid
+	$hostid_in = $_[1];
+	#graph
+	$graph_in = $_[2];
 
 
-    # get graph with name
-    $graphs = getgraphs($auth_in, $hostid_in, $graph_in);
-	
-    # each graph in list
-    # filter graphs that do not belong to our hostid
-    foreach $graphi(@{$graphs->{result}}) {
-	
-	# get graph id
-    	$graphid = $graphi->{graphid};
-    	# get graph name
-    	$graph_name = $graphi->{name};
-    	    
-    	print "    "."    "."    "."Graph found: ".$graph_name." (".$graphid.")"."\n";
-    	    
-    	# delete the graph
-    	deletegraph($auth_in, $graphid);
-    }
+	# get graph with name
+	$graphs = getgraphs($auth_in, $hostid_in, $graph_in);
+		
+	# each graph in list
+	# filter graphs that do not belong to our hostid
+	foreach $graphi(@{$graphs->{result}}) {
+		
+		# get graph id
+			$graphid = $graphi->{graphid};
+			# get graph name
+			$graph_name = $graphi->{name};
+				
+			print "	"."	"."	"."Graph found: ".$graph_name." (".$graphid.")"."\n";
+				
+			# delete the graph
+			deletegraph($auth_in, $graphid);
+	}
 }
 
 
 # create graph in zabbix (auth, graphname, graphtype, mintype, maxtype, minvalue, maxvalue, showtriggers, graphitems, hostid)
 sub creategraph
 {
-    #ymin_type = 0 -> calculated
-    #ymin_type = 1 -> fixed
-    #graphtype = 0 -> normal
-    #graphtype = 1 -> stack
+	#ymin_type = 0 -> calculated
+	#ymin_type = 1 -> fixed
+	#graphtype = 0 -> normal
+	#graphtype = 1 -> stack
 
-    #auth
-    $auth_in = $_[0];
-    #graph name
-    $graph_in = $_[1];
-    #graphtype, mintype, maxtype, minvalue, maxvalue
-    $graphtype_in = $_[2];
-    $mintype_in = $_[3];
-    $maxtype_in = $_[4];        
-    $minvalue_in = $_[5];
-    $maxvalue_in = $_[6];
-    $showtriggers_in = $_[7];
-    #graphitems
-    $graphitems_in = $_[8];
-    #hostid
-    $hostid_in = $_[9];
-    
-    # load graphs json
-    $data = '{ "jsonrpc": "2.0", "method": "graph.create", "params": { "gitems": [ "" ], "name": "", "width": "900", "height": "300", "yaxismin": "0", "yaxismax": "100", 
-	       "show_work_period": "1", "show_triggers": "1", "graphtype": "0", "show_legend": "1", "show_3d": "0", "percent_left": "0", "percent_right": "0", "ymin_type": "0",
-	       "ymax_type": "0", "ymin_itemid": "0", "ymax_itemid": "0" }, "id": 4, "auth": "" }';
+	#auth
+	$auth_in = $_[0];
+	#graph name
+	$graph_in = $_[1];
+	#graphtype, mintype, maxtype, minvalue, maxvalue
+	$graphtype_in = $_[2];
+	$mintype_in = $_[3];
+	$maxtype_in = $_[4];		
+	$minvalue_in = $_[5];
+	$maxvalue_in = $_[6];
+	$showtriggers_in = $_[7];
+	#graphitems
+	$graphitems_in = $_[8];
+	#hostid
+	$hostid_in = $_[9];
 
-    # decode json
-    $dec = decode_json($data);
-    # set auth
-    $dec->{"auth"} = $auth_in;
-    # set graph name
-    $dec->{"params"}->{"name"} = $graph_in;
-    # set graphtype, mintype, maxtype, minvalue, maxvalue
-    $dec->{"params"}->{graphtype} = $graphtype_in;
-    $dec->{"params"}->{ymin_type} = $mintype_in;
-    $dec->{"params"}->{ymax_type} = $maxtype_in;
-    $dec->{"params"}->{yaxismin} = $minvalue_in;
-    $dec->{"params"}->{yaxismax} = $maxvalue_in;
-    $dec->{"params"}->{show_triggers} = $showtriggers_in;
-    # set graph gitems
-    $dec->{"params"}->{gitems} = $graphitems_in;
-    # encode back to data
-    $data = encode_json($dec);
-    
-#    print $data."\n\n";
+	# check for existing graph (there should be only one of this name)
+	local $graphs = getgraphs($auth_in, $hostid_in, $graph_in);
 
-    # send json
-    $res = sendjson($data);            
-    # decode json
-    $dec_out = decode_json($res);    
-    
-#    print $res."\n\n";
+	# load graphs json
+	local $data = '{ "jsonrpc": "2.0", "method": "graph.create", "params": { "gitems": [ "" ], "name": "", "width": "900", "height": "300", "yaxismin": "0", "yaxismax": "100", 
+			   "show_work_period": "1", "show_triggers": "1", "graphtype": "0", "show_legend": "1", "show_3d": "0", "percent_left": "0", "percent_right": "0", "ymin_type": "0",
+			   "ymax_type": "0", "ymin_itemid": "0", "ymax_itemid": "0" }, "id": 4, "auth": "" }';
 
-    print "    "."    "."    "."Graph created: ".$graph_in."\n";
-    
-    #return
-    return $dec_out;
+	# decode json
+	local $dec = decode_json($data);
+	# set auth
+	$dec->{"auth"} = $auth_in;
+	# set graph name
+	$dec->{"params"}->{"name"} = $graph_in;
+		
+	# switch to update if graph exists
+	local $graph_id = 0;
+	if (@{$graphs->{result}} > 0) {
+		$graph_id = $graphs->{result}[0]->{graphid};
+	}
+	# print "\ngraph to update:".$graph_id;
+	# print "\n".Dumper($graphs);
+	local $isupdate = 0;
+	if ($graph_id > 0) {
+		$isupdate = 1;
+		$dec->{"method"} = "graph.update";
+		$dec->{"params"}->{"graphid"} = $graph_id;
+	}
+		
+	# set graphtype, mintype, maxtype, minvalue, maxvalue
+	$dec->{"params"}->{graphtype} = $graphtype_in;
+	$dec->{"params"}->{ymin_type} = $mintype_in;
+	$dec->{"params"}->{ymax_type} = $maxtype_in;
+	$dec->{"params"}->{yaxismin} = $minvalue_in;
+	$dec->{"params"}->{yaxismax} = $maxvalue_in;
+	$dec->{"params"}->{show_triggers} = $showtriggers_in;
+	# set graph gitems
+	$dec->{"params"}->{gitems} = $graphitems_in;
+	# encode back to data
+	$data = encode_json($dec);
+	
+	# print Dumper($dec)."\n\n";
+
+	# send json
+	$res = sendjson($data);			
+	# decode json
+	$dec_out = decode_json($res);	
+	
+	print $res."\n\n";
+	# standard result:
+	# {"jsonrpc":"2.0","result":{"graphids":["828"]},"id":4}
+	# error examples:
+	# {"jsonrpc":"2.0","error":{"code":-32602,"message":"Invalid params.","data":"Graph with name \"Active Sessions auto-stack 2\" already exists in graphs or graph prototypes."},"id":4}
+	# {"jsonrpc":"2.0","error":{"code":-32602,"message":"Invalid params.","data":"No permissions to referred object or it does not exist!"},"id":4}
+
+	if (!$isupdate) {
+		$graph_id = $dec_out->{"result"}->{"graphids"}[0];
+		print "	"."	"."	"."Graph created: ".$graph_in." (".$graph_id.")\n";
+	} else {
+		print "	"."	"."	"."Graph updated: ".$graph_in." (".$graph_id.")\n";
+	}
+	
+	#return
+	return $dec_out;
 }
 
 
 
-	#########
-	# modify these values accordingly
-	#########
-	require './config.pl';
+		#########
+		# modify these values accordingly
+		#########
+		require './config.pl';
 
 
 ##########
@@ -397,112 +426,112 @@ $hostgroups = gethostgroups($auth);
 
 # each hostgroup in list
 foreach $hostgroup(@{$hostgroups->{result}}) {
-    # get groupid and name
-    $groupid = $hostgroup->{groupid};
-    $name = $hostgroup->{name};
-        
-    # not templates or discovered hosts
-    if ((lc($name) ne "templates") && (lc($name) ne "discovered hosts")) {        
-	
-	# get hosts list
-	$hosts = gethosts($auth, $groupid);
-	
-	print "HOSTGROUP: ".$name." (".$groupid.")"."\n";	
-	
-	# each host in list
-	foreach $host(@{$hosts->{result}}) {
-	    # get parent templates
-	    $templates = $host->{parentTemplates};
-	    # match results
-	    $templatematch = 0;	    
-	    	    
-	    # each template in list
-	    # filter hosts that do not belong to our template
-	    foreach $templatei(@{$templates}) {
-		# template name match
-		if (lc($templatei->{name}) eq lc($template)) { $templatematch = 1; }
-	    }	    
-	    
-	    # template match
-	    if ($templatematch == 1) {
-		# get host id and name
-		$name = $host->{name};
-		$hostid = $host->{hostid};
-		# reset graph item array
-		@graph_item = ();
+	# get groupid and name
+	$groupid = $hostgroup->{groupid};
+	$name = $hostgroup->{name};
 		
-		print "    "."HOST: ".$name." (".$hostid.")"."\n";
+	# not templates or discovered hosts
+	if ((lc($name) ne "templates") && (lc($name) ne "discovered hosts")) {		
 		
-		#########
-		# search for existing graphs and delete if found
-		#########
-		deletegraphs($auth, $hostid, $graph);
-	
-    		# get item list
-		$items = getitems($auth, $hostid);
-		$count = 0;
-		# reset colorbase;
-		$colorbase = 0;
-		# reset colorindexes;
-		@colorindex = 0;
+		# get hosts list
+		$hosts = gethosts($auth, $groupid);
 		
-		# each item in list
-		foreach $item(@{$items->{result}}) {
-    		    # get item name
-    		    $item_name = $item->{name};
-    		    #get item id
-    		    $item_id = $item->{itemid};
-    		    #get item key
-    		    $item_key = $item->{key_};
-    		    # reset regex index
-    		    $regexindex = 0;
-    		    # reset host item array
-    		    @host_item = ();
-    		    
-    		    # each regex in list
-    		    foreach $regex(@regexes) {    		    
-    		    
-    			# item name match regex and item key is not prototype
-    			if (($item_name =~ /$regex/) && ($item_key !~ /.*{#.*}/))
-    			{		        	    		    	    
-			    print "    "."    "."ITEM: ".$item_name." (".$item_id.")"."\n";
+		print "HOSTGROUP: ".$name." (".$groupid.")"."\n";		
+		
+		# each host in list
+		foreach $host(@{$hosts->{result}}) {
+			# get parent templates
+			$templates = $host->{parentTemplates};
+			# match results
+			$templatematch = 0;			
+						
+			# each template in list
+			# filter hosts that do not belong to our template
+			foreach $templatei(@{$templates}) {
+				# template name match
+				if (lc($templatei->{name}) eq lc($template)) { $templatematch = 1; }
+			}			
 			
-			    # we may have exceeded color count, if so, use other base (light, ultralight)
-			    if ($colorindex[$regexindex] > $#{$colors[0]}) { 
-				# move to next color base
-				$colorbase++;
-				# reset color index;
-				$colorindex[$regexindex] = 0;
-			    
-				print "    "."    "."WARNING: Not enough colors, switched to another color base"."\n";
-			    }
-			
-			    $graph_item[$count]->{itemid} = $item_id;
-			    $graph_item[$count]->{drawtype} = $drawtype;
-			    $graph_item[$count]->{sortorder} = $count;
-			    $graph_item[$count]->{color} = $colors[$colorbase + $regexindex][$colorindex[$regexindex]];
-			    $graph_item[$count]->{yaxisside} = "0";  ### 0=left, 1=right;
-			    $graph_item[$count]->{type} = "0"; 
-			    $graph_item[$count]->{calc_fnc} = $calcfunction;
-			
-			    # inc count;
-			    $count++;
-			    # inc colorindex;
-			    $colorindex[$regexindex]++;
+			# template match
+			if ($templatematch == 1) {
+				# get host id and name
+				$name = $host->{name};
+				$hostid = $host->{hostid};
+				# reset graph item array
+				@graph_item = ();
+				
+				print "	"."HOST: ".$name." (".$hostid.")"."\n";
+				
+				#########
+				# search for existing graphs and delete if found
+				#########
+				#deletegraphs($auth, $hostid, $graph);
+		
+					# get item list
+				$items = getitems($auth, $hostid);
+				$count = 0;
+				# reset colorbase;
+				$colorbase = 0;
+				# reset colorindexes;
+				@colorindex = 0;
+				
+				# each item in list
+				foreach $item(@{$items->{result}}) {
+						# get item name
+						$item_name = $item->{name};
+						#get item id
+						$item_id = $item->{itemid};
+						#get item key
+						$item_key = $item->{key_};
+						# reset regex index
+						$regexindex = 0;
+						# reset host item array
+						@host_item = ();
+						
+						# each regex in list
+						foreach $regex(@regexes) {						
+						
+							# item name match regex and item key is not prototype
+							if (($item_name =~ /$regex/) && ($item_key !~ /.*{#.*}/))
+							{																	
+							print "	"."	"."ITEM: ".$item_name." (".$item_id.")"."\n";
+						
+							# we may have exceeded color count, if so, use other base (light, ultralight)
+							if ($colorindex[$regexindex] > $#{$colors[0]}) { 
+								# move to next color base
+								$colorbase++;
+								# reset color index;
+								$colorindex[$regexindex] = 0;
+							
+								print "	"."	"."WARNING: Not enough colors, switched to another color base"."\n";
+							}
+						
+							$graph_item[$count]->{itemid} = $item_id;
+							$graph_item[$count]->{drawtype} = $drawtype;
+							$graph_item[$count]->{sortorder} = $count;
+							$graph_item[$count]->{color} = $colors[$colorbase + $regexindex][$colorindex[$regexindex]];
+							$graph_item[$count]->{yaxisside} = "0";  ### 0=left, 1=right;
+							$graph_item[$count]->{type} = "0"; 
+							$graph_item[$count]->{calc_fnc} = $calcfunction;
+						
+							# inc count;
+							$count++;
+							# inc colorindex;
+							$colorindex[$regexindex]++;
+						}
+						
+						# inc regexindex
+						$regexindex++;
+					}
+				}
+				
+				#########
+				# create a new graph
+				#########
+				creategraph($auth, $graph, $graphtype, $mintype, $maxtype, $minvalue, $maxvalue, $showtriggers, \@graph_item, $hostid);
 			}
-			
-			# inc regexindex
-			$regexindex++;
-		    }
 		}
-		
-		#########
-		# create a new graph
-		#########
-		creategraph($auth, $graph, $graphtype, $mintype, $maxtype, $minvalue, $maxvalue, $showtriggers, \@graph_item, $hostid);
-	    }
 	}
-    }
 }
 
 print "\n";
