@@ -230,7 +230,7 @@ sub deletegraph
 	
 #	print $res."\n\n";
 
-	print "	"."	"."	"."Graph deleted."."\n";
+	print $config_indentation.$config_indentation.$config_indentation."Graph deleted."."\n";
 	
 	#return
 	return $dec_out;
@@ -260,7 +260,7 @@ sub deletegraphs
 			# get graph name
 			$graph_name = $graphi->{name};
 				
-			print "	"."	"."	"."Graph found: ".$graph_name." (".$graphid.")"."\n";
+			print $config_indentation.$config_indentation.$config_indentation."Graph found: ".$graph_name." (".$graphid.")"."\n";
 				
 			# delete the graph
 			deletegraph($auth_in, $graphid);
@@ -340,18 +340,22 @@ sub creategraph
 	# decode json
 	$dec_out = decode_json($res);	
 	
-	print $res."\n\n";
+	#print $res."\n\n";
 	# standard result:
 	# {"jsonrpc":"2.0","result":{"graphids":["828"]},"id":4}
 	# error examples:
 	# {"jsonrpc":"2.0","error":{"code":-32602,"message":"Invalid params.","data":"Graph with name \"Active Sessions auto-stack 2\" already exists in graphs or graph prototypes."},"id":4}
 	# {"jsonrpc":"2.0","error":{"code":-32602,"message":"Invalid params.","data":"No permissions to referred object or it does not exist!"},"id":4}
-
-	if (!$isupdate) {
-		$graph_id = $dec_out->{"result"}->{"graphids"}[0];
-		print "	"."	"."	"."Graph created: ".$graph_in." (".$graph_id.")\n";
+	
+	if ($dec_out->{"result"}) {
+		if (!$isupdate) {
+			$graph_id = $dec_out->{"result"}->{"graphids"}[0];
+			print $config_indentation.$config_indentation.$config_indentation."Graph created: ".$graph_in." (".$graph_id.")\n";
+		} else {
+			print $config_indentation.$config_indentation.$config_indentation."Graph updated: ".$graph_in." (".$graph_id.")\n";
+		}
 	} else {
-		print "	"."	"."	"."Graph updated: ".$graph_in." (".$graph_id.")\n";
+		print $config_indentation.$config_indentation.$config_indentation."Error occured: ".encode_json($dec_out->{"error"}).")\n";
 	}
 	
 	#return
@@ -364,8 +368,11 @@ sub creategraph
 		# modify these values accordingly
 		#########
 		# should the graphs be removed on each run
-		$config_recreate = 0;
-		# user options
+		# (set to 1 to enable removing graphs before creation)
+		# defaults to 0 (update, don't remove); update is better because ut preserves ids
+		$config_recreate_graphs = 0;
+		# visual indentation
+		$config_indentation = "   ";
 		require './config.pl';
 
 
@@ -463,7 +470,7 @@ foreach $hostgroup(@{$hostgroups->{result}}) {
 				# reset graph item array
 				@graph_item = ();
 				
-				print "	"."HOST: ".$name." (".$hostid.")"."\n";
+				print $config_indentation."HOST: ".$name." (".$hostid.")"."\n";
 				
 				#########
 				# search for existing graphs and delete if found
@@ -472,7 +479,7 @@ foreach $hostgroup(@{$hostgroups->{result}}) {
 					deletegraphs($auth, $hostid, $graph);
 				}
 		
-					# get item list
+				# get item list
 				$items = getitems($auth, $hostid);
 				$count = 0;
 				# reset colorbase;
@@ -499,7 +506,7 @@ foreach $hostgroup(@{$hostgroups->{result}}) {
 							# item name match regex and item key is not prototype
 							if (($item_name =~ /$regex/) && ($item_key !~ /.*{#.*}/))
 							{																	
-							print "	"."	"."ITEM: ".$item_name." (".$item_id.")"."\n";
+							print $config_indentation.$config_indentation."ITEM: ".$item_name." (".$item_id.")"."\n";
 						
 							# we may have exceeded color count, if so, use other base (light, ultralight)
 							if ($colorindex[$regexindex] > $#{$colors[0]}) { 
@@ -508,7 +515,7 @@ foreach $hostgroup(@{$hostgroups->{result}}) {
 								# reset color index;
 								$colorindex[$regexindex] = 0;
 							
-								print "	"."	"."WARNING: Not enough colors, switched to another color base"."\n";
+								print $config_indentation.$config_indentation."WARNING: Not enough colors, switched to another color base"."\n";
 							}
 						
 							$graph_item[$count]->{itemid} = $item_id;
