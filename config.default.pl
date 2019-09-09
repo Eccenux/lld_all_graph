@@ -1,6 +1,11 @@
 #########
 # modify these values accordingly (and save file as "config.pl")
 #########
+# should the graphs be removed on each run
+# (set to 1 to enable removing graphs before creation)
+# defaults to 0 (update, don't remove); update is better because it preserves ids
+$config_recreate_graphs = 0;
+
 # user
 $user = "Admin";
 # password

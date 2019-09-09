@@ -363,6 +363,9 @@ sub creategraph
 		#########
 		# modify these values accordingly
 		#########
+		# should the graphs be removed on each run
+		$config_recreate = 0;
+		# user options
 		require './config.pl';
 
 
@@ -465,7 +468,9 @@ foreach $hostgroup(@{$hostgroups->{result}}) {
 				#########
 				# search for existing graphs and delete if found
 				#########
-				#deletegraphs($auth, $hostid, $graph);
+				if ($config_recreate_graphs) {
+					deletegraphs($auth, $hostid, $graph);
+				}
 		
 					# get item list
 				$items = getitems($auth, $hostid);
