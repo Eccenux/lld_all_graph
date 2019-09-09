@@ -54,9 +54,11 @@ sub sendjson
 sub authenticate
 {
     # load auth json
-    $data = '{ "jsonrpc": "2.0", "method": "user.authenticate", "params": { "user": "'.$user.'", "password": "'.$password.'" }, "id": 0, "auth": null }';
+    $data = '{ "jsonrpc": "2.0", "method": "user.login", "params": { "user": "'.$user.'", "password": "'.$password.'" }, "id": 1, "auth": null }';
     # send json
     $res = sendjson($data);    
+	#print $data."\n\n";
+	print "res:".$res."\n\n";
     
     # decode json
     $dec = decode_json($res);
