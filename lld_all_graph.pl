@@ -37,14 +37,14 @@ sub loadjson
 sub sendjson
 {
 	#jsonstr
-	$jsonstr = $_[0];
+	my $jsonstr = $_[0];
 	
 	# send json to zabbix and get result
-	$res = `curl -s -i -X POST -H $header -d '$data' $url`;
+	my $res = `curl -s -i -X POST -H $header -d '$data' $url`;
 	# find start of json
-	$i = index($res, "{");
+	my $i = index($res, "{");
 	# get json only
-	$res_out = substr($res, $i);
+	my $res_out = substr($res, $i);
 	
 	#return
 	return $res_out;	
@@ -55,16 +55,31 @@ sub sendjson
 sub authenticate
 {
 	# load auth json
-	$data = '{ "jsonrpc": "2.0", "method": "user.login", "params": { "user": "'.$user.'", "password": "'.$password.'" }, "id": 1, "auth": null }';
+	local $data = '{ "jsonrpc": "2.0", "method": "user.login", "params": { "user": "'.$user.'", "password": "'.$password.'" }, "id": 1, "auth": null }';
 	# send json
-	$res = sendjson($data);	
-		#print $data."\n\n";
-		print "res:".$res."\n\n";
+	my $res = sendjson($data);	
+	#print $data."\n\n";
+	#print "res:".$res."\n\n";
+	
+	my $auth_out = "";
 	
 	# decode json
-	$dec = decode_json($res);
+	my $dec = eval { decode_json($res) };
+	# parsing error
+	if ($@)
+	{
+		print "[ERROR] Failed parsing response from the server! Make sure Zabbix API url is correct.\n";
+		print "[ERROR] Parsing error was: $@\n";
+		return $auth_out;
+	}
+	
 	# get auth key
 	$auth_out = $dec->{"result"};
+	
+	# report errors
+	if ($dec->{"error"}) {
+		print "[ERROR] Authentication error: ".encode_json($dec->{"error"}).")\n";
+	}
 
 	#return
 	return $auth_out;
@@ -430,6 +445,10 @@ print "\n";
 
 # authenticate with zabbix
 $auth = authenticate();
+if (!$auth) {
+	print "Auth failure\n\n";
+	exit;
+}
 
 # get hostgroup list
 $hostgroups = gethostgroups($auth);
