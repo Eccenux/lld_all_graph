@@ -4,6 +4,11 @@ Automatic graph for auto-discovered items
 Originally created by **mmarkwitzz**.
 See: [https://www.zabbix.com/forum/zabbix-cookbook/27037-automatic-graph-of-all-lld-items-per-host](https://www.zabbix.com/forum/zabbix-cookbook/27037-automatic-graph-of-all-lld-items-per-host).
 
+License: [CC-BY](https://creativecommons.org/licenses/by/3.0/). That basically means you are free to:
+* Share — copy and redistribute the material in any medium or format.
+* Adapt — remix, transform, and build upon the material for any purpose, even commercially.
+  
+
 What does this do?
 ------------------
 
